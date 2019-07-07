@@ -1,0 +1,92 @@
+#!ipxe
+
+#一些在线的iPXE启动站点
+
+#Require trusted images
+#imgtrust
+
+#Permanently require trusted images
+#imgtrust --permanent
+
+#Allow untrusted images
+imgtrust --allow ||
+
+console --picture ipxe.png ||
+
+:main_menu
+#菜单标题
+menu some demo boot on boot.ipxe.org
+
+#菜单列表
+item --gap
+item --gap
+item --gap
+item --key a http://boot.ipxe.org/helenos/helenos.ipxe   a http://boot.ipxe.org/helenos/helenos.ipxe (0.5.0 15MB)
+item --key b http://boot.ipxe.org/memtest.0              b http://boot.ipxe.org/memtest.0  (5.01)
+item --key c http://boot.ipxe.org/burn/dosboot.img       c http://boot.ipxe.org/burn/dosboot.img  (freedos freecom ver 0.84 1.4MB)
+item --key d http://boot.ipxe.org/freedos/fdfullcd.iso   d http://boot.ipxe.org/freedos/fdfullcd.iso 153MB
+item --key e http://boot.ipxe.org/demo/boot.php          e http://boot.ipxe.org/demo/boot.php (linux kernel3.16.0-rc4 4MB)
+item --gap
+item --gap local:
+item --key f http://boot.ipxe.org/demo/boot.php(local)   f http://boot.ipxe.org/demo/boot.php (linux kernel3.16.0-rc4 4MB)(local)
+item --key g http://boot.ipxe.org/memtest.0(local)       g http://boot.ipxe.org/memtest.0  (5.01) (local)
+item --gap
+item --key s shell                                       s Shell
+
+#选择菜单
+choose --default ${menu} menu || goto exit
+goto ${menu} || goto main_menu
+goto main_menu
+
+:shell
+echo type exit to return menu
+shell
+goto main_menu
+
+:http://boot.ipxe.org/helenos/helenos.ipxe
+imgfree
+chain --autofree http://boot.ipxe.org/helenos/helenos.ipxe || read void
+goto main_menu
+
+
+#memtest x86 5.01
+:http://boot.ipxe.org/memtest.0
+imgfree
+chain --autofree http://boot.ipxe.org/memtest.0 || read void
+goto main_menu
+
+
+:http://boot.ipxe.org/demo/boot.php
+imgfree
+chain --autofree http://boot.ipxe.org/demo/boot.php || read void
+goto main_menu
+
+
+:http://boot.ipxe.org/demo/boot.php(local)
+imgfree
+chain --autofree demo/linux.ipxe || read void
+goto main_menu
+
+
+
+:http://boot.ipxe.org/memtest.0(local)
+imgfree
+chain --autofree memtest.0 || read void
+goto main_menu
+
+
+:http://boot.ipxe.org/freedos/fdfullcd.iso
+imgfree
+sanboot http://boot.ipxe.org/freedos/fdfullcd.iso || read void
+goto main_menu
+
+
+#freedos
+:http://boot.ipxe.org/burn/dosboot.img
+imgfree
+initrd http://boot.ipxe.org/burn/dosboot.img || read void
+kernel http://boot.salstar.sk/memdisk || read void
+boot || read void
+goto main_menu
+
+:exit

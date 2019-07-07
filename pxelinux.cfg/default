@@ -1,0 +1,9 @@
+default liims
+prompt 100000
+
+# stable LIIMS system based on Arch Linux
+# mount read-only squashfs as root
+LABEL  liims
+KERNEL http://pxe.ustc.edu.cn/boot/bin/liims/liims160909/boot/vmlinuz-linux-lts
+INITRD http://pxe.ustc.edu.cn/boot/bin/liims/liims160909/boot/initramfs-linux-lts.img
+APPEND nfsserver=202.38.93.94 nfspath=/nfsroot/liims/liims160909/ ip=:::::eth0:dhcp rootaufs=tmpfs version=160909

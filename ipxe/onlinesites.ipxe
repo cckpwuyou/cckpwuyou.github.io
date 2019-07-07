@@ -1,0 +1,173 @@
+#!ipxe
+
+#一些在线的iPXE启动站点
+
+#Require trusted images
+#imgtrust
+
+#Permanently require trusted images
+#imgtrust --permanent
+
+#Allow untrusted images
+imgtrust --allow ||
+
+:main_menu
+#菜单标题
+menu some online iPXE boot sites
+
+#菜单列表
+item --gap
+item --gap
+item --gap
+item --gap
+item --gap
+item --key a http://boot.centos.org               a http://boot.centos.org
+item --key b http://boot.fedoraproject.org        b http://boot.fedoraproject.org
+item --key c http://boot.ipxe.org                 c http://boot.ipxe.org ...
+item --key d http://boot.netboot.xyz              d http://boot.netboot.xyz
+item --key e http://boot.salstar.sk               e http://boot.salstar.sk
+item --key f http://boot.squashible.com           f http://boot.squashible.com
+item --key g http://cloudboot.nchc.org.tw         g http://cloudboot.nchc.org.tw
+item --key h http://netboot.cz                    h http://netboot.cz
+item --key i http://pxe.ustc.edu.cn               i http://pxe.ustc.edu.cn
+item --key j https://github.com/bradgillap        j https://github.com/bradgillap/IPXEBOOT
+item --key k https://boot.ikwb.com                k https://boot.ikwb.com
+item --gap
+item --key s shell                                s Shell
+item --key p pxelinux                             p pxelinux
+
+#选择菜单
+choose --default ${menu} menu || goto shell
+goto ${menu} || read void
+goto main_menu
+
+
+:shell
+echo type exit to return menu
+shell
+goto main_menu
+
+
+:http://netboot.cz
+chain --autofree http://netboot.cz || read void
+goto main_menu
+
+
+#会自动切换到自带的ipxe版本(有md5sum,有签名验证)，然后先用https连接，失败后再http
+:http://boot.netboot.xyz
+chain --autofree http://boot.netboot.xyz || read void
+goto main_menu
+
+
+#官方站点
+:http://boot.ipxe.org
+chain --autofree boot.ipxe.org/menu.ipxe || read void
+goto main_menu
+
+
+#会自动切换到自带的ipxe版本(70个命令,有数字签名验证,没有md5sum) 入口是menu.ipxe。有链接到其他站点
+:http://boot.salstar.sk
+chain --autofree http://boot.salstar.sk || read void
+goto main_menu
+
+
+#背景owe you a wallpaper.有pciid scan
+:https://github.com/bradgillap
+echo https://github.com/bradgillap/IPXEBOOT/raw/master/boot.ipxe
+sleep 3
+chain --autofree bradgillap/boot.ipxe || read void
+goto main_menu
+
+
+#squashible.com 启用live linux 转换squashfs
+:http://boot.squashible.com
+chain --autofree  http://boot.squashible.com || read void
+goto main_menu
+
+
+:pxelinux
+set url /pxelinux.0
+#TFTP prefix 210必须设置为某目录 以/结尾。自动查找此目录下的pxelinux.cfg里面的配置
+isset ${root} || set root https://boot.ikwb.com
+set 210:string ${root}/
+#指定209配置文件后，就不再自动查找MAC前缀的配置了
+set 209:string pxelinux.cfg/default
+chain ${url} || read void
+goto main_menu
+
+
+#use the boot.centos.org service to install CentOS Linux using a tiny (1Mb) bootable iPXE .iso image.
+:http://boot.centos.org
+imgfree
+set url http://boot.centos.org/bco/images/CentOS-BootService-ipxe.iso
+echo ${url}
+#可以直接iso sanboot启动
+sanboot ${url} || read void
+goto main_menu
+
+#pxelinux启动
+imgfree
+set url https://boot.centos.org/bco/pxelinux.0
+set 210:string https://boot.centos.org/bco/
+set 209:string pxelinux.cfg/default
+
+show 209 ||
+show 210 ||
+show url ||
+prompt wait...
+chain ${url} || read void
+goto main_menu
+
+#memdiskiso启动
+echo memdisk and remote iso
+set url http://boot.centos.org/bco/images/CentOS-BootService-ipxe.iso
+kernel /pxelinux/memdisk iso raw ||
+initrd ${url} ||
+boot || read void
+
+#memdisk本地iso启动
+echo memdisk and local iso
+imgfree
+kernel /pxelinux/memdisk iso raw ||
+initrd CentOS-BootService-ipxe.iso ||
+boot || read void
+goto main_menu
+
+
+:http://boot.fedoraproject.org
+#wget -O/boot/bfo.lkrn https://dl.fedoraproject.org/pub/alt/bfo/bfo.lkrn
+#grubby --add-kernel=/boot/bfo.lkrn --title="Boot BFO"
+imgfree
+set url http://dl.fedoraproject.org/pub/alt/bfo/bfo.iso
+echo ${url}
+#可以直接iso sanboot启动
+sanboot ${url} || read void
+goto main_menu
+
+
+
+:http://cloudboot.nchc.org.tw
+#台湾云计算中心 不好用 php生成菜单
+chain --autofree http://cloudboot.nchc.org.tw/cloudboot/rom-image.ipxe || read void
+goto main_menu
+
+
+:https://boot.ikwb.com
+#test only
+#chain --autofree https://boot.ikwb.com
+chain --autofree https://boot.ikwb.com/hello.ipxe || read void
+goto main_menu
+
+
+:http://pxe.ustc.edu.cn
+#中科大 中国科技大学 只能校内访问
+#https://lug.ustc.edu.cn/wiki/server/pxe/start
+#http://pxe.ustc.edu.cn/boot/bin/ustc.ipxe.lkrn
+#pxe.ustc.edu.cn = 202.38.93.94
+set 210:string http://202.38.93.94/boot/tftp/
+chain ${210:string}pxelinux.0|| read void
+goto main_menu
+
+
+#http://etherboot.org
+#http://boot.kernel.org/  已经不存在了http://web.archive.org/web/20110903050357/http://boot.kernel.org/

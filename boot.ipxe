@@ -1,0 +1,10 @@
+#!ipxe
+
+# Give user a chance to enter the shell
+prompt --key 0x02 --timeout 2000 Press Ctrl-B for the iPXE shell... || goto no_shell
+shell
+exit
+
+:no_shell
+# Boot the system
+chain --autofree ipxe/onlinesites.ipxe
